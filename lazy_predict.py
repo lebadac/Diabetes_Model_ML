@@ -2,7 +2,10 @@
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
+from mlflow.metrics import precision_score
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import classification_report, recall_score
@@ -52,32 +55,21 @@ preprocessor = ColumnTransformer([
     ("ord_feature", ord_transformer, ["smoking_history"])
 ])
 
-# Define the model with RandomForestClassifier
-cls = ImbPipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('smote', SMOTE(random_state=42)),  # SMOTE to handle class imbalance
-    ('model', RandomForestClassifier(class_weight='balanced'))  # Adjust weights if needed
-])
+x_train = preprocessor.fit_transform(x_train)
+x_test = preprocessor.transform(x_test)
+sm = SMOTE(random_state=42)
+x_train, y_train = sm.fit_resample(x_train, y_train)
 
-#Define parameters for GridSearchCV
-params = {
-    'model__criterion': ['gini', 'entropy', 'log_loss']
-}
+clf = LazyClassifier(
+    verbose=1,
+    ignore_warnings=True,
+    custom_metric=recall_score,
+    classifiers=[
+        LogisticRegression,
+        RandomForestClassifier,
+        DecisionTreeClassifier
+    ]
+)
 
-# Perform grid search for hyperparameter tuning
-grid_search = GridSearchCV(estimator=cls, param_grid=params, cv=5, scoring='recall', verbose=3)
-
-# Train the model using GridSearchCV
-models, prediction = grid_search.fit(x_train, x_test, y_train, y_test)
-
-# Predict on the test set
-y_predict = grid_search.predict(x_test)
-
-# Evaluate the model
-print(classification_report(y_test, y_predict))
-print("Recall Score:", recall_score(y_test, y_predict))
-
-# Optionally: Display confusion matrix for more detailed evaluation
-from sklearn.metrics import confusion_matrix
-print("Confusion Matrix:")
-print(confusion_matrix(y_test, y_predict))
+models, predictions = clf.fit(x_train, x_test, y_train, y_test)
+print(models)
