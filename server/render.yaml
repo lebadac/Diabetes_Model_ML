@@ -3,7 +3,7 @@ services:
     name: diabetes-predictor
     env: docker
     plan: free
-    repo: https://github.com/your-username/DiabeteProjects
+    repo: https://github.com/lebadac/Diabetes_Project
     branch: main
     dockerfilePath: server/Dockerfile
     buildFilter:
