@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: diabetes-predictor
+    env: docker
+    plan: free
+    repo: https://github.com/your-username/DiabeteProjects
+    branch: main
+    dockerfilePath: server/Dockerfile
+    buildFilter:
+      paths:
+        - server/**
+    envVars:
+      - key: PORT
+        value: 8888
