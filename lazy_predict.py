@@ -60,6 +60,12 @@ x_test = preprocessor.transform(x_test)
 sm = SMOTE(random_state=42)
 x_train, y_train = sm.fit_resample(x_train, y_train)
 
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
+from xgboost import XGBClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
 clf = LazyClassifier(
     verbose=1,
     ignore_warnings=True,
@@ -67,9 +73,16 @@ clf = LazyClassifier(
     classifiers=[
         LogisticRegression,
         RandomForestClassifier,
-        DecisionTreeClassifier
+        DecisionTreeClassifier,
+        AdaBoostClassifier,
+        GradientBoostingClassifier,
+        XGBClassifier,
+        GaussianNB,
+        KNeighborsClassifier,
+        LinearDiscriminantAnalysis
     ]
 )
+
 
 models, predictions = clf.fit(x_train, x_test, y_train, y_test)
 print(models)
