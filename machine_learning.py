@@ -10,6 +10,7 @@ from sklearn.metrics import classification_report, recall_score
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.ensemble import AdaBoostClassifier
 import joblib
 
 # Load the dataset
@@ -57,15 +58,16 @@ preprocessor = ColumnTransformer([
 # Define the model with RandomForestClassifier
 cls = ImbPipeline(steps=[
     ('preprocessor', preprocessor),
-    ('smote', SMOTE(random_state=42)),  # SMOTE to handle class imbalance
-    ('model', LogisticRegression(random_state=42)) # Adjust weights if needed
+    ('smote', SMOTE(random_state=42)),
+    ('model', AdaBoostClassifier(random_state=42))
 ])
 
-#Define parameters for GridSearchCV
 params = {
-    'model__penalty': ['l1', 'l2', 'elasticnet'],
-    'model__solver': ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga']
+    'model__n_estimators': [50, 100, 200],
+    'model__learning_rate': [0.5, 1.0, 1.5],
+    'model__algorithm': ['SAMME', 'SAMME.R']
 }
+
 
 # # Perform grid search for hyperparameter tuning
 grid_search = GridSearchCV(estimator=cls, param_grid=params, cv=5, scoring='recall', verbose=3, n_jobs=5)
@@ -85,5 +87,35 @@ print(classification_report(y_test, y_predict))
 # print("Confusion Matrix:")
 # print(confusion_matrix(y_test, y_predict))
 
-#Save model
+# Save model
+# joblib.dump(grid_search.best_estimator_, "diabetes_model_logisticregression.joblib")
+#Define parameters for GridSearchCV
+params = {
+    'model__C': [0.1, 1, 10],
+    'model__kernel': ['linear', 'rbf', 'poly'],
+    'model__gamma': ['scale', 'auto', 0.01, 0.1],
+    'model__degree': [2, 3],  # chỉ dùng khi kernel = 'poly'
+    'model__class_weight': [None, 'balanced']
+}
+
+
+# # Perform grid search for hyperparameter tuning
+grid_search = GridSearchCV(estimator=cls, param_grid=params, cv=5, scoring='recall', verbose=3, n_jobs=5)
+# Train the model using GridSearchCV
+grid_search.fit(x_train, y_train)
+
+print(grid_search.best_params_)
+
+# Predict on the test set
+y_predict = grid_search.predict(x_test)
+
+# Evaluate the model
+print(classification_report(y_test, y_predict))
+
+# Display confusion matrix for more detailed evaluation
+# from sklearn.metrics import confusion_matrix
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_predict))
+
+# Save model
 # joblib.dump(grid_search.best_estimator_, "diabetes_model_logisticregression.joblib")
